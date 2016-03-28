@@ -99,6 +99,8 @@ namespace SFXUtility.Features.Trackers
                 var timerOffset = Menu.Item(Name + "DrawingSSTimerOffset").GetValue<Slider>().Value;
                 var timer = Menu.Item(Name + "SSTimer").GetValue<bool>();
 
+
+
                 _sprite.Begin(SpriteFlags.AlphaBlend);
                 foreach (var lp in _lastPositions)
                 {
@@ -186,6 +188,7 @@ namespace SFXUtility.Features.Trackers
 
         private void DrawCircleMinimap(Vector3 center, float radius, Color color, int thickness = 5, int quality = 30)
         {
+            
             var sharpColor = new ColorBGRA(color.R, color.G, color.B, 255);
             var pointList = new List<Vector3>();
             for (var i = 0; i < quality; i++)
