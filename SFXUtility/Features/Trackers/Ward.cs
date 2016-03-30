@@ -170,7 +170,7 @@ namespace SFXUtility.Features.Trackers
             }
         }
 
-        private void OnAttackableUnitEnterVisiblityClient(AttackableUnit sender, EventArgs args)
+        private void OnAttackableUnitEnterVisiblityClient(GameObject sender, EventArgs args)
         {
             try
             {
