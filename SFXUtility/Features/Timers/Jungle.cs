@@ -65,6 +65,8 @@ namespace SFXUtility.Features.Timers
             }
         }
 
+        private List<EnemyTracker> Enemies;
+
         public override string Name
         {
             get { return "Jungle"; }
@@ -149,6 +151,7 @@ namespace SFXUtility.Features.Timers
                     {
                         mob.Dead = false;
                         camp.Dead = false;
+                        camp.ProbablyDead = false;
                     }
                 }
             }
@@ -179,6 +182,55 @@ namespace SFXUtility.Features.Timers
                     {
                         dragonStacks = buff.Count;
                     }
+
+                    //bluebuff
+                    buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("crestoftheancientgolem", StringComparison.OrdinalIgnoreCase));
+                    if (buff != null)
+                    {
+                        var blueCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Blue")) && c.Team == enemy.Team);
+                        if (!blueCamp.Dead)
+                        {
+                            blueCamp.ProbablyDead = true;
+                            blueCamp.NextRespawnTime = buff.StartTime + blueCamp.RespawnTime;
+                        }
+                    }
+
+                    //redbuff
+                    buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("blessingofthelizardelder", StringComparison.OrdinalIgnoreCase));
+                    if (buff != null)
+                    {
+                        var redCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Red")) && c.Team == enemy.Team);
+                        if (!redCamp.Dead)
+                        {
+                            redCamp.ProbablyDead = true;
+                            redCamp.NextRespawnTime = buff.StartTime + redCamp.RespawnTime;
+                        }
+                    }
+
+                    //chicken
+                    buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("razorbeakalert", StringComparison.OrdinalIgnoreCase));
+                    if (buff != null)
+                    {
+                        var chickenCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Razorbeak")) && c.Team == enemy.Team);
+                        if (!chickenCamp.Dead)
+                        {
+                            chickenCamp.ProbablyDead = true;
+                            chickenCamp.NextRespawnTime = buff.StartTime + chickenCamp.RespawnTime;
+                        }
+                    }
+
+                    //golem
+                    buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("krugstonefist", StringComparison.OrdinalIgnoreCase));
+                    if (buff != null)
+                    {
+                        var golemCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Krug")) && c.Team == enemy.Team);
+                        if (!golemCamp.Dead)
+                        {
+                            golemCamp.ProbablyDead = true;
+                            golemCamp.NextRespawnTime = buff.StartTime + golemCamp.RespawnTime;
+                        }
+                    }
+
                 }
 
                 if (dragonStacks > _dragonStacks || dragonStacks == 5)
@@ -236,11 +288,15 @@ namespace SFXUtility.Features.Timers
                     return;
                 }
 
-                foreach (var camp in _camps.Where(c => c.Dead))
+                foreach (var camp in _camps.Where(c => c.Dead || c.ProbablyDead))
                 {
+                    var color = (camp.ProbablyDead)? Color.Red : Color.White;
+                    
+
                     if (camp.NextRespawnTime - Game.Time <= 0)
                     {
                         camp.Dead = false;
+                        camp.ProbablyDead = false;
                         continue;
                     }
 
@@ -248,13 +304,13 @@ namespace SFXUtility.Features.Timers
                     {
                         _mapText.DrawTextCentered(
                             (camp.NextRespawnTime - (int) Game.Time).FormatTime(mapTotalSeconds),
-                            Drawing.WorldToScreen(camp.Position), Color.White);
+                            Drawing.WorldToScreen(camp.Position), color);
                     }
                     if (minimapEnabled)
                     {
                         _minimapText.DrawTextCentered(
                             (camp.NextRespawnTime - (int) Game.Time).FormatTime(minimapTotalSeconds),
-                            camp.MinimapPosition, Color.White);
+                            camp.MinimapPosition, color);
                     }
                 }
             }
@@ -314,6 +370,14 @@ namespace SFXUtility.Features.Timers
                         .Select(
                             c => new Camp(c.SpawnTime, c.RespawnTime, c.Position, c.Mobs, c.IsBig, c.MapType, c.Team)));
 
+                Enemies = new List<EnemyTracker>();
+                foreach (var enemy in GameObjects.EnemyHeroes)
+                {
+                    var Tracker = new EnemyTracker { NetworkId = enemy.NetworkId };
+                    Tracker.Update();
+                    Enemies.Add(Tracker);
+                }
+
                 if (!_camps.Any())
                 {
                     OnUnload(null, new UnloadEventArgs(true));
@@ -339,14 +403,60 @@ namespace SFXUtility.Features.Timers
                 GameObjectTeam team,
                 bool dead = false) : base(spawnTime, respawnTime, position, mobs, isBig, mapType, team)
             {
+                ProbablyDead = false;
                 Dead = dead;
                 Mobs = mobs.Select(mob => new Mob(mob.Name)).ToList();
             }
 
             public new List<Mob> Mobs { get; private set; }
             public float NextRespawnTime { get; set; }
-            public bool Dead { get; set; }
+            public bool Dead
+            {
+                get;
+                set;
+            }
+            private bool _probablydead;
+            public bool ProbablyDead
+            {
+                get
+                {
+                    return _probablydead && !Dead;
+                }
+                set
+                {
+                    _probablydead = value;
+                }
+            }
         }
+
+        private class EnemyTracker
+        {
+            public int NetworkId;
+
+            public bool HadBlue { get; private set; }
+            public bool HasBlue 
+            { 
+                get
+                {
+                    return GameObjects.EnemyHeroes.FirstOrDefault(n => n.NetworkId == this.NetworkId).HasBuff("");
+                }
+            }
+
+            public bool HadRed { get; private set; }
+            public bool HasRed 
+            {
+                get
+                {
+                    return GameObjects.EnemyHeroes.FirstOrDefault(n => n.NetworkId == this.NetworkId).HasBuff("");
+                }
+            }
+            public void Update()
+            {
+                this.HadBlue = this.HasBlue;
+                this.HadRed = this.HasRed;
+            }
+        }
+
 
         private class Mob : Data.Jungle.Mob
         {
