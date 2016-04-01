@@ -25,6 +25,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using LeagueSharp;
 using LeagueSharp.Common;
 using SFXUtility.Classes;
 using SFXUtility.Library.Extensions.NET;
@@ -43,6 +44,16 @@ namespace SFXUtility
         {
             try
             {
+
+                bool showPlayerMessage = true;
+                var playerMessage = "This is a hotfix of the SFXUtility assembly.";
+
+                if (showPlayerMessage)
+                {
+                    Game.PrintChat("==============================");
+                    Game.PrintChat(playerMessage);
+                    Game.PrintChat("==============================");
+                }
                 Menu = new Menu(Name, Name, true);
 
                 var infoMenu = new Menu("Info", Name + "Info");
@@ -81,7 +92,7 @@ namespace SFXUtility
 
         public string Name
         {
-            get { return "SFXUtility"; }
+            get { return "FixSFXUtility"; }
         }
 
         public Version Version
@@ -119,7 +130,7 @@ namespace SFXUtility
             try
             {
                 Menu.AddToMainMenu();
-
+                
                 var errorText = "Exception";
                 Global.Logger.OnItemAdded += delegate
                 {
