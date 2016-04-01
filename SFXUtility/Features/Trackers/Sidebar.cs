@@ -121,15 +121,15 @@ namespace SFXUtility.Features.Trackers
                 }
 
                 var index = 0;
-
+                
                 var hudWidth = (float) Math.Ceiling(HudWidth * _scale);
                 var hudHeight = (float) Math.Ceiling(HudHeight * _scale);
-
+                
                 var spacing =
                     (float)
                         Math.Ceiling((10f + Menu.Item(Menu.Name + "DrawingSpacing").GetValue<Slider>().Value) * _scale) +
                     hudHeight;
-
+                var showUnitName = Menu.Item(Menu.Name + "DrawingShowUnitName").GetValue<bool>();
                 var offsetTop = Menu.Item(Menu.Name + "DrawingOffsetTop").GetValue<Slider>().Value + hudHeight / 2f;
                 var offsetRight = Drawing.Width - Menu.Item(Menu.Name + "DrawingOffsetRight").GetValue<Slider>().Value -
                                   (hudWidth + (float) Math.Ceiling(4 * _scale)) / 2f;
@@ -142,7 +142,7 @@ namespace SFXUtility.Features.Trackers
                     }
                     else if (!enemy.Unit.IsDead)
                     {
-                        enemy.DeathEndTime = 0;
+                        enemy.DeathEndTime = 0; 
                     }
 
                     var offset = spacing * index;
@@ -239,12 +239,13 @@ namespace SFXUtility.Features.Trackers
                             ? new Color(255, 255, 255, 215)
                             : new Color(255, 255, 255, 240));
 
-                    _text14.DrawTextLeft(
-                        enemy.Unit.Name,
-                        new Vector2(offsetRight + hudWidth * 0.52f, offsetTop - hudHeight * 0.57f + offset),
-                        !enemy.Unit.IsVisible || enemy.Unit.IsDead
-                            ? new Color(255, 255, 255, 215)
-                            : new Color(255, 255, 255, 240));
+                    if(showUnitName)
+                        _text14.DrawTextLeft(
+                            enemy.Unit.Name,
+                            new Vector2(offsetRight + hudWidth * 0.52f, offsetTop - hudHeight * 0.57f + offset),
+                            !enemy.Unit.IsVisible || enemy.Unit.IsDead
+                                ? new Color(255, 255, 255, 215)
+                                : new Color(255, 255, 255, 240));
 
                     var healthStart = new Vector2(
                         offsetRight - hudWidth * 0.358f, offsetTop + hudHeight * 0.268f + offset);
@@ -363,6 +364,8 @@ namespace SFXUtility.Features.Trackers
                 drawingMenu.AddItem(
                     new MenuItem(drawingMenu.Name + "Spacing", "Spacing").SetValue(new Slider(10, 0, 30)));
                 drawingMenu.AddItem(new MenuItem(drawingMenu.Name + "Scale", "Scale").SetValue(new Slider(10, 5, 15)));
+
+                drawingMenu.AddItem(new MenuItem(drawingMenu.Name + "ShowUnitName", "Show Unit Name").SetValue(true));
 
                 Menu.AddSubMenu(drawingMenu);
                 Menu.AddItem(new MenuItem(Name + "Clickable", "Clickable").SetValue(false));
