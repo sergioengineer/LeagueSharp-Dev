@@ -46,7 +46,7 @@ namespace SFXUtility
             {
 
                 bool showPlayerMessage = true;
-                var playerMessage = "This is a hotfix of the SFXUtility assembly.";
+                var playerMessage = "SFXUtillity hotfix. Version 0.9.0.15 -> Jungler timer now can see how many enemy's buffs and calculate when they are going to respaw.(works for gromp, krugs, raptors, blue and red";
 
                 if (showPlayerMessage)
                 {
