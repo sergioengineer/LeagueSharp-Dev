@@ -41,7 +41,7 @@ namespace SFXUtility.Features.Timers
 {
     internal class Jungle : Child<Timers>
     {
-        private const float CheckInterval = 800f;
+        private float CheckInterval = 800f;
         private readonly List<Camp> _camps = new List<Camp>();
         private int _dragonStacks;
         private float _lastCheck = Environment.TickCount;
@@ -165,11 +165,12 @@ namespace SFXUtility.Features.Timers
         {
             try
             {
+                CheckInterval = (float)Menu.Item(Name + "UpdateInterval").GetValue<Slider>().Value;
+
                 if (_lastCheck + CheckInterval > Environment.TickCount)
                 {
                     return;
                 }
-
                 _lastCheck = Environment.TickCount;
 
                 var dragonStacks = 0;
@@ -187,11 +188,11 @@ namespace SFXUtility.Features.Timers
                     buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("crestoftheancientgolem", StringComparison.OrdinalIgnoreCase));
                     if (buff != null)
                     {
-                        var blueCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Blue")) && c.Team == enemy.Team);
-                        if (!blueCamp.Dead)
+                        var blueCamp = _camps.First(c => c.Mobs.Any(m => m.Name.StartsWith("SRU_Blue")) && c.Team == enemy.Team);
+                        if (!blueCamp.Dead && !blueCamp.ProbablyDead)
                         {
                             blueCamp.ProbablyDead = true;
-                            blueCamp.NextRespawnTime = buff.StartTime + blueCamp.RespawnTime;
+                            blueCamp.NextRespawnTime = (int)buff.StartTime + blueCamp.RespawnTime;
                         }
                     }
 
@@ -199,11 +200,11 @@ namespace SFXUtility.Features.Timers
                     buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("blessingofthelizardelder", StringComparison.OrdinalIgnoreCase));
                     if (buff != null)
                     {
-                        var redCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Red")) && c.Team == enemy.Team);
-                        if (!redCamp.Dead)
+                        var redCamp = _camps.First(c => c.Mobs.Any(m => m.Name.StartsWith("SRU_Red")) && c.Team == enemy.Team);
+                        if (!redCamp.Dead && !redCamp.ProbablyDead)
                         {
                             redCamp.ProbablyDead = true;
-                            redCamp.NextRespawnTime = buff.StartTime + redCamp.RespawnTime;
+                            redCamp.NextRespawnTime = (int)buff.StartTime + redCamp.RespawnTime;
                         }
                     }
 
@@ -211,11 +212,11 @@ namespace SFXUtility.Features.Timers
                     buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("razorbeakalert", StringComparison.OrdinalIgnoreCase));
                     if (buff != null)
                     {
-                        var chickenCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Razorbeak")) && c.Team == enemy.Team);
-                        if (!chickenCamp.Dead)
+                        var chickenCamp = _camps.First(c => c.Mobs.Any(m => m.Name.StartsWith("SRU_Razorbeak")) && c.Team == enemy.Team);
+                        if (!chickenCamp.Dead && !chickenCamp.ProbablyDead)
                         {
                             chickenCamp.ProbablyDead = true;
-                            chickenCamp.NextRespawnTime = buff.StartTime + chickenCamp.RespawnTime;
+                            chickenCamp.NextRespawnTime = (int)buff.StartTime + chickenCamp.RespawnTime;
                         }
                     }
 
@@ -223,11 +224,23 @@ namespace SFXUtility.Features.Timers
                     buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("krugstonefist", StringComparison.OrdinalIgnoreCase));
                     if (buff != null)
                     {
-                        var golemCamp = _camps.First(c => c.Mobs.Any(m => m.Name.Contains("SRU_Krug")) && c.Team == enemy.Team);
-                        if (!golemCamp.Dead)
+                        var golemCamp = _camps.First(c => c.Mobs.Any(m => m.Name.StartsWith("SRU_Krug")) && c.Team == enemy.Team);
+                        if (!golemCamp.Dead && !golemCamp.ProbablyDead)
                         {
                             golemCamp.ProbablyDead = true;
-                            golemCamp.NextRespawnTime = buff.StartTime + golemCamp.RespawnTime;
+                            golemCamp.NextRespawnTime = (int)buff.StartTime + golemCamp.RespawnTime;
+                        }
+                    }
+
+                    //gromp
+                    buff = enemy.Buffs.FirstOrDefault(b => b.Name.Equals("s5junglemushroomarmor", StringComparison.OrdinalIgnoreCase));
+                    if (buff != null)
+                    {
+                        var grompCamp = _camps.First(c => c.Mobs.Any(m => m.Name.StartsWith("SRU_Gromp")) && c.Team == enemy.Team);
+                        if (!grompCamp.Dead && !grompCamp.ProbablyDead)
+                        {
+                            grompCamp.ProbablyDead = true;
+                            grompCamp.NextRespawnTime = (int)buff.StartTime + grompCamp.RespawnTime;
                         }
                     }
 
@@ -325,6 +338,7 @@ namespace SFXUtility.Features.Timers
             try
             {
                 Menu = new Menu(Name, Name);
+
                 var drawingMenu = new Menu("Drawing", Name + "Drawing");
                 var drawingMapMenu = new Menu("Map", drawingMenu.Name + "Map");
                 var drawingMinimapMenu = new Menu("Minimap", drawingMenu.Name + "Minimap");
@@ -347,6 +361,7 @@ namespace SFXUtility.Features.Timers
                 drawingMenu.AddSubMenu(drawingMinimapMenu);
 
                 Menu.AddSubMenu(drawingMenu);
+                Menu.AddItem(new MenuItem(Name + "UpdateInterval", "Update Interval").SetValue(new Slider(800, 800, 2400)));
 
                 Menu.AddItem(new MenuItem(Name + "Enabled", "Enabled").SetValue(false));
 
@@ -420,11 +435,11 @@ namespace SFXUtility.Features.Timers
             {
                 get
                 {
-                    return _probablydead && !Dead;
+                    return this._probablydead && !this.Dead;
                 }
                 set
                 {
-                    _probablydead = value;
+                    this._probablydead = value;
                 }
             }
         }
