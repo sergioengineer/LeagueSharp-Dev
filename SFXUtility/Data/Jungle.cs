@@ -39,6 +39,7 @@ namespace SFXUtility.Data
 
         static Jungle()
         {
+            
             try
             {
                 Camps = new List<Camp>
@@ -250,7 +251,7 @@ namespace SFXUtility.Data
             public Utility.Map.MapType MapType { get; set; }
             public GameObjectTeam Team { get; set; }
         }
-
+                
         public class Mob
         {
             public Mob(string name, bool isBig = false)
