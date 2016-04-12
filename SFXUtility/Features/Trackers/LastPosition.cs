@@ -77,6 +77,7 @@ namespace SFXUtility.Features.Trackers
         {
             Drawing.OnEndScene -= OnDrawingEndScene;
             Obj_AI_Base.OnTeleport -= OnObjAiBaseTeleport;
+            Game.OnUpdate -= Game_OnUpdate;
 
             base.OnDisable();
         }
@@ -130,7 +131,7 @@ namespace SFXUtility.Features.Trackers
                 {
                     return;
                 }
-
+                
                 var map = Menu.Item(Name + "Map").GetValue<bool>();
                 var showSharedExperienceWarning = Menu.Item(Name + "SharedExperience").GetValue<bool>();
                 var minimap = Menu.Item(Name + "Minimap").GetValue<bool>();
