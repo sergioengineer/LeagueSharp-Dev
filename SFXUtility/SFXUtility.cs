@@ -46,7 +46,7 @@ namespace SFXUtility
             {
 
                 bool showPlayerMessage = true;
-                var playerMessage = "SFXUtillity hotfix. Ver.0.9.0.15";
+                var playerMessage = "SFXUtillity hotfix. Ver" + Version.ToString();
 
                 if (showPlayerMessage)
                 {

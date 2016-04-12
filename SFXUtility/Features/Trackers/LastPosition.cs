@@ -52,6 +52,7 @@ namespace SFXUtility.Features.Trackers
         private Sprite _sprite;
         private Texture _teleportTexture;
         private Font _text;
+        private Texture[] InvisiTextures;
 
         public LastPosition(Trackers parent) : base(parent)
         {
@@ -60,13 +61,14 @@ namespace SFXUtility.Features.Trackers
 
         public override string Name
         {
-            get { return "Last Position"; }
+            get { return "Awareness"; }
         }
 
         protected override void OnEnable()
         {
             Drawing.OnEndScene += OnDrawingEndScene;
             Obj_AI_Base.OnTeleport += OnObjAiBaseTeleport;
+            Game.OnUpdate += Game_OnUpdate;
 
             base.OnEnable();
         }
@@ -75,8 +77,50 @@ namespace SFXUtility.Features.Trackers
         {
             Drawing.OnEndScene -= OnDrawingEndScene;
             Obj_AI_Base.OnTeleport -= OnObjAiBaseTeleport;
+            Game.OnUpdate -= Game_OnUpdate;
 
             base.OnDisable();
+        }
+
+        private void Game_OnUpdate(EventArgs args)
+        {
+            foreach(var lp in _lastPositions)
+            {
+                if(lp.Hero.Experience != lp.LastExp)
+                {
+                    float newXp = (float)Math.Round(Math.Round(lp.Hero.Experience, 2) - Math.Round(lp.LastExp, 2), 1);
+
+                    if(MinionExp.Any(mExp => mExp > newXp))
+                    {
+                        if(MinionExp.Any(mExp => Math.Round(mExp*0.652,1) == newXp))
+                        {
+                            lp.ChampionsAroundCount = 1;
+                        }
+                        else if (MinionExp.Any(mExp => Math.Round(mExp*0.4346,1) == newXp))
+                        {
+                            lp.ChampionsAroundCount = 2;
+                        }
+                        else if (MinionExp.Any(mExp => Math.Round(mExp*0.326,1) == newXp))
+                        {
+                            lp.ChampionsAroundCount = 3;
+                        }
+                        else if (MinionExp.Any(mExp => Math.Round(mExp*0.2608,1) == newXp))
+                        {
+                            lp.ChampionsAroundCount = 4;
+                        }
+                    }
+                    else
+                    {
+                        lp.ChampionsAroundCount = 0;
+                    }
+
+                    lp.LastExp = lp.Hero.Experience;
+                }
+                if(lp.ChampionsAroundCount > 0 && TimeSpan.FromSeconds(Game.Time - lp.LastSeen).TotalSeconds > 2)
+                {
+                    lp.ChampionsAroundCount = 0;
+                }
+            }
         }
 
         private void OnDrawingEndScene(EventArgs args)
@@ -87,8 +131,9 @@ namespace SFXUtility.Features.Trackers
                 {
                     return;
                 }
-
+                
                 var map = Menu.Item(Name + "Map").GetValue<bool>();
+                var showSharedExperienceWarning = Menu.Item(Name + "SharedExperience").GetValue<bool>();
                 var minimap = Menu.Item(Name + "Minimap").GetValue<bool>();
 
                 var ssCircle = Menu.Item(Name + "SSCircle").GetValue<bool>();
@@ -117,6 +162,23 @@ namespace SFXUtility.Features.Trackers
                         if (!lp.Hero.IsDead)
                         {
                             lp.LastSeen = Game.Time;
+                            
+                            if(showSharedExperienceWarning && lp.ChampionsAroundCount > 0)
+                            {
+                                var deadMinion = ObjectManager.Get<Obj_AI_Minion>().FirstOrDefault(m => m.IsDead && m.IsAlly && m.Distance(lp.Hero.Position) <= 1600);
+                                if (deadMinion != null)
+                                {
+                                    var range = 1800; //TODO add range compensation ONLY if there are more than 1 minion dead around.(share experience range = 1600)
+                                    var herosInvisibleCount = lp.ChampionsAroundCount + 1 - deadMinion.GetEnemiesInRange(range).Count;
+                                    var Yoffset = -10 - 22; //-10 -> no summoner name on top of the HPbar / -32 -> with summoner name on top of hp bar / + moves downwards and - upwards
+                                    var Xoffset = +70; //middle of the HP bar / + moves to the right and - to the left
+                                    if (herosInvisibleCount > 0)
+                                    {
+                                        _sprite.DrawCentered(InvisiTextures[herosInvisibleCount - 1], new Vector2(lp.Hero.HPBarPosition.X + Xoffset, lp.Hero.HPBarPosition.Y + Yoffset));
+                                    }
+                                }
+                            }
+                            
                         }
                     }
                     if (!lp.Hero.IsVisible && !lp.Hero.IsDead)
@@ -269,7 +331,7 @@ namespace SFXUtility.Features.Trackers
                 Menu.AddItem(new MenuItem(Name + "SSCircle", "SS Circle").SetValue(false));
                 Menu.AddItem(new MenuItem(Menu.Name + "Minimap", "Minimap").SetValue(true));
                 Menu.AddItem(new MenuItem(Menu.Name + "Map", "Map").SetValue(true));
-
+                Menu.AddItem(new MenuItem(Menu.Name + "SharedExperience", "Shared Experience Warning?").SetValue(true));
                 Menu.AddItem(new MenuItem(Name + "Enabled", "Enabled").SetValue(false));
 
                 Parent.Menu.AddSubMenu(Menu);
@@ -293,6 +355,7 @@ namespace SFXUtility.Features.Trackers
                     OnUnload(null, new UnloadEventArgs(true));
                     return;
                 }
+                
 
                 _teleportTexture = Resources.LP_Teleport.ToTexture();
 
@@ -307,6 +370,14 @@ namespace SFXUtility.Features.Trackers
                     _lastPositions.Add(eStruct);
                 }
 
+                var scaling = 0.6f;
+                InvisiTextures = new Texture[] { 
+                                        Resources.LP_INVISIBLE1.Scale(scaling).ToTexture(),
+                                        Resources.LP_INVISIBLE2.Scale(scaling).ToTexture(),
+                                        Resources.LP_INVISIBLE3.Scale(scaling).ToTexture(),
+                                        Resources.LP_INVISIBLE4.Scale(scaling).ToTexture()
+                };
+
                 base.OnInitialize();
             }
             catch (Exception ex)
@@ -315,19 +386,33 @@ namespace SFXUtility.Features.Trackers
             }
         }
 
+
+        float[] MinionExp =
+        {
+            58.88f, //MeleeMinion
+            29.44f, //RangedMinion 
+            92f, //SiegeMinion
+            97f //SuperMinion 
+        };
+
         internal class LastPositionStruct
         {
             public LastPositionStruct(Obj_AI_Hero hero)
             {
                 Hero = hero;
                 LastPosition = Vector3.Zero;
+                LastExp = hero.Experience;
+                ChampionsAroundCount = 0;
             }
 
+            public int ChampionsAroundCount { get; set; }
             public Obj_AI_Hero Hero { get; private set; }
             public bool IsTeleporting { get; set; }
             public float LastSeen { get; set; }
             public Vector3 LastPosition { get; set; }
+            public float LastExp { get; set; }
             public bool Teleported { get; set; }
         }
+        
     }
 }
