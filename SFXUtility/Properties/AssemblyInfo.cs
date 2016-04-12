@@ -31,11 +31,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: AssemblyTitle("SFXUtility")]
+[assembly: AssemblyTitle("FixSFXUtility")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("Release")]
 [assembly: AssemblyCompany("Sentryfox")]
-[assembly: AssemblyProduct("SFXUtility")]
+[assembly: AssemblyProduct("FixSFXUtility")]
 [assembly: AssemblyCopyright("Copyright © 2014 - 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -61,6 +61,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("0.9.0.15")]
-[assembly: AssemblyFileVersion("0.9.0.15")]
-[assembly: AssemblyInformationalVersion("0.9.0.15")]
+[assembly: AssemblyVersion("0.10.0.1")]
+[assembly: AssemblyFileVersion("0.10.0.1")]
+[assembly: AssemblyInformationalVersion("0.10.0.1")]
